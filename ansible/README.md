@@ -182,6 +182,7 @@ ansible-playbook -i hosts.yml labs/06-datacenter-collapsed-core/site.yml
 - [HPE Airheads Community](https://community.arubanetworks.com)
 - [`../terraform/`](../terraform/) — Infrastructure as Code AOS-CX
 - [`../docs/gitlab-cicd/`](../docs/gitlab-cicd/) — Pipeline CI/CD
+- 🔗 [`homelab-setup/ubuntu-server/`](https://github.com/Luconik/homelab-setup/tree/main/ubuntu-server) — Installation Ansible 2.17 + venv sur la VM automation
 
 ---
 ---
@@ -234,6 +235,7 @@ ansible-playbook -i hosts.yml labs/01-vlan-management/site.yml --check --diff
 - [HPE Aruba AOS-CX Ansible Docs](https://developer.arubanetworks.com/aruba-aoscx/docs/ansible-getting-started)
 - [`../terraform/`](../terraform/) — IaC AOS-CX
 - [`../docs/gitlab-cicd/`](../docs/gitlab-cicd/) — CI/CD Pipeline
+- 🔗 [`homelab-setup/ubuntu-server/`](https://github.com/Luconik/homelab-setup/tree/main/ubuntu-server) — Ansible 2.17 install + venv on automation VM
 
 ---
 
