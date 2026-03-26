@@ -4,211 +4,201 @@
 
 # netdevops
 
-**Nicolas Culetto — Pre-Sales Systems Engineer @ HPE Aruba Networking**
+**Automatisation réseau HPE Aruba AOS-CX — Ansible · Terraform · GitLab CI/CD**
 
-*Network Automation · Infrastructure as Code · GitLab CI/CD*
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-nicolasculetto-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/nicolasculetto/)
 [![GitHub](https://img.shields.io/badge/GitHub-Luconik-181717?style=flat-square&logo=github)](https://github.com/Luconik)
-[![Ansible](https://img.shields.io/badge/Automation-Ansible-EE0000?style=flat-square&logo=ansible)](https://www.ansible.com/)
-[![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?style=flat-square&logo=terraform)](https://www.terraform.io/)
-[![GitLab](https://img.shields.io/badge/CI/CD-GitLab-FC6D26?style=flat-square&logo=gitlab)](https://gitlab.com/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-nicolasculetto-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/nicolasculetto/)
+[![Ansible](https://img.shields.io/badge/Ansible-AOS--CX-EE0000?style=flat-square&logo=ansible)](https://galaxy.ansible.com/arubanetworks/aoscx)
+[![Terraform](https://img.shields.io/badge/Terraform-aruba%2Faoscx-7B42BC?style=flat-square&logo=terraform)](https://registry.terraform.io/providers/aruba/aoscx/latest)
 
----
-
-> 🇫🇷 Documentation principale en français — un résumé en anglais est disponible dans chaque section.  
-> 🇬🇧 Main documentation in French — an English summary is available in each section.
+> 🇫🇷 [Français](#fr) | 🇬🇧 [English](#en)
 
 </div>
 
 ---
 
-## À propos
+<a name="fr"></a>
+## 🇫🇷 Français
 
-Ce dépôt regroupe des labs d'automatisation réseau basés sur **Ansible** et **Terraform**, intégrés dans un pipeline **GitLab CI/CD** self-hosted.
+### Présentation
 
-Les labs couvrent trois plateformes :
-- 🟠 **HPE Aruba AOS-CX** — switching enterprise (VSX, OSPF, VLAN, Campus, Datacenter)
-- 🔵 **Juniper vJunos** — routing/switching virtualisé (NETCONF, Junos)
-- 🟡 **Proxmox VE** — automatisation de l'hyperviseur homelab via API
+Ce repo documente la mise en place d'un pipeline **NetDevOps complet** dans un homelab, ciblant des switches **HPE Aruba AOS-CX** et des routeurs virtuels **Juniper vJunos**.
 
-> **EN** — This repository contains network automation labs using Ansible and Terraform, integrated in a self-hosted GitLab CI/CD pipeline. Labs cover three platforms: HPE Aruba AOS-CX switching, Juniper vJunos routing, and Proxmox VE hypervisor automation.
+Il couvre 6 labs Ansible progressifs, une configuration Terraform, et un pipeline GitLab CI/CD en 4 stages — le tout hébergé sur une instance GitLab self-hosted et mirroré sur GitHub.
 
 ---
 
-## Stack technique
+### Stack technique
 
-| Composant | Technologie | Rôle |
-|-----------|-------------|------|
-| Automatisation | Ansible + collection `arubanetworks.aoscx` | Playbooks AOS-CX |
-| IaC | Terraform + provider `arubanetworks/aoscx` | Provisioning déclaratif |
-| CI/CD | GitLab CE (`gitlab.culetto.fr`) | Pipeline lint → deploy → plan → apply |
-| Runner | automation.culetto.fr | Exécution des jobs GitLab |
-| Émulation réseau | EVE-NG (VM Proxmox) | Switches AOS-CX OVA + vJunos |
-| Hyperviseur | Proxmox VE (`pve1.culetto.fr`) | Infrastructure homelab |
-
-> **EN** — The stack uses Ansible for AOS-CX configuration automation, Terraform for declarative provisioning, and a self-hosted GitLab instance for CI/CD. All network devices run as virtual machines inside EVE-NG on a Proxmox VE host.
+| Composant | Solution |
+|-----------|----------|
+| Hyperviseur | Proxmox VE (`pve1.your-domain.com`) |
+| CI/CD | GitLab CE (`gitlab.your-domain.com`) |
+| Automatisation | Ansible + collection `arubanetworks.aoscx` |
+| Infrastructure as Code | Terraform + provider `aruba/aoscx` |
+| Switch cible | HPE Aruba AOS-CX (REST API port 443) |
+| Routeurs virtuels | Juniper vJunos (EVE-NG sur Proxmox) — Phase 2 |
+| VM d'automation | Ubuntu Server (`automation.your-domain.com`) |
 
 ---
 
-## Structure du dépôt
+### Structure du repo
 
 ```
 netdevops/
-├── ansible/
-│   ├── ansible.cfg                  # Configuration Ansible
-│   ├── hosts.yml                    # Inventaire (switches AOS-CX)
+├── ansible/                     ← Playbooks AOS-CX (Labs 01→06)
+│   ├── README.md
+│   ├── ansible.cfg
+│   ├── hosts.yml
 │   ├── group_vars/
-│   │   └── all.yml                  # Variables globales
 │   └── labs/
-│       ├── 01-vlan-management/      # VLAN Access & Trunk
-│       ├── 02-l2-campus/            # Campus 2-Tier L2 VSX + MCLAG
-│       ├── 03-l3-ospf/              # Campus 2-Tier L3 OSPF Routed Access
-│       ├── 04-vsx-l2/               # VSX L2 pur — ISL + MCLAG + MSTP
-│       ├── 05-vsx-l3-campus/        # Campus 3-Tier VSX + OSPF
-│       └── 06-datacenter-collapsed-core/  # DC Collapsed Core — OSPF + Jumbo MTU
-├── terraform/
-│   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
-├── juniper/                         # Labs vJunos (NETCONF)
-│   └── labs/
-├── proxmox/                         # Automatisation Proxmox API
-│   └── labs/
-├── docs/                            # Guides d'installation et de configuration
-└── .gitlab-ci.yml                   # Pipeline CI/CD
+│       ├── 01-vlan-management/
+│       ├── 02-l2-campus/
+│       ├── 03-l3-ospf/
+│       ├── 04-vsx-l2/
+│       ├── 05-vsx-l3-campus/
+│       └── 06-datacenter-collapsed-core/
+├── terraform/                   ← Infrastructure as Code AOS-CX
+│   └── README.md
+├── docs/
+│   ├── gitlab-cicd/             ← Pipeline CI/CD (4 stages)
+│   │   └── README.md
+│   ├── aruba/                   ← Ressources & références Aruba
+│   │   └── README.md
+│   └── juniper/                 ← Labs vJunos (Phase 2)
+│       └── README.md
+└── assets/
+    └── Logo_Luconik.png
 ```
 
-> **EN** — The repository is split into three platform sections (ansible for AOS-CX, juniper for vJunos, proxmox for hypervisor automation), plus a Terraform directory and a GitLab CI/CD pipeline at the root.
+---
+
+### Labs AOS-CX
+
+| Lab | Topologie | Complexité |
+|-----|-----------|------------|
+| [01 — VLAN Management](ansible/labs/01-vlan-management/) | Access & Trunk | ⭐ |
+| [02 — Campus 2-Tier L2](ansible/labs/02-l2-campus/) | VSX + ISL + MCLAG + Active Gateway | ⭐⭐ |
+| [03 — Campus 2-Tier L3](ansible/labs/03-l3-ospf/) | OSPF Routed Access + SVIs | ⭐⭐⭐ |
+| [04 — VSX L2 pur](ansible/labs/04-vsx-l2/) | VSX + MSTP + MCLAG | ⭐⭐ |
+| [05 — Campus 3-Tier](ansible/labs/05-vsx-l3-campus/) | VSX Aggregation + Core + OSPF | ⭐⭐⭐⭐ |
+| [06 — DC Collapsed Core](ansible/labs/06-datacenter-collapsed-core/) | MCLAG + Jumbo MTU + OSPF upstream | ⭐⭐⭐⭐ |
 
 ---
 
-## Labs HPE Aruba AOS-CX
-
-| Lab | Topologie | Protocoles | Outil |
-|-----|-----------|------------|-------|
-| [01 — VLAN Management](ansible/labs/01-vlan-management/) | 1 switch | L2, Access, Trunk | Ansible |
-| [02 — Campus 2-Tier L2](ansible/labs/02-l2-campus/) | VSX Core + 2 Access | MCLAG, Active GW | Ansible |
-| [03 — Campus 2-Tier L3 OSPF](ansible/labs/03-l3-ospf/) | VSX Core + 2 Access | OSPF, Routed Access | Ansible |
-| [04 — VSX L2](ansible/labs/04-vsx-l2/) | 2 switches VSX | ISL, MCLAG, MSTP | Ansible |
-| [05 — Campus 3-Tier VSX OSPF](ansible/labs/05-vsx-l3-campus/) | Core + VSX Agg + Access | OSPF, Active GW, MCLAG | Ansible |
-| [06 — DC Collapsed Core](ansible/labs/06-datacenter-collapsed-core/) | VSX DC-Core + CORE | OSPF, Active GW, Jumbo MTU | Ansible |
-
-> **EN** — Six progressive AOS-CX labs from basic VLAN management to full datacenter collapsed core topology with VSX, OSPF, and jumbo MTU. Each lab includes an Ansible playbook, a topology diagram, and verification commands.
-
----
-
-## Labs Juniper vJunos
-
-| Lab | Description | Outil |
-|-----|-------------|-------|
-| 01 — Déploiement vJunos | Installation et configuration initiale sur EVE-NG | Manuel |
-| 02 — NETCONF basics | Premiers appels NETCONF via Python/Ansible | Ansible |
-| 03 — BGP vJunos ↔ AOS-CX | Peering BGP entre Juniper et Aruba | Ansible |
-
-> **EN** — Juniper vJunos labs running on EVE-NG. Covers initial deployment, NETCONF automation basics, and interoperability scenarios with HPE Aruba AOS-CX.
-
-📋 Labs en cours de rédaction
-
----
-
-## Automatisation Proxmox
-
-| Lab | Description | Outil |
-|-----|-------------|-------|
-| 01 — API Proxmox | Interaction avec l'API REST Proxmox | Ansible |
-| 02 — Scheduler VMs | Démarrage/arrêt automatique de VMs | Ansible + n8n |
-
-> **EN** — Proxmox automation labs using the REST API. Covers VM lifecycle management and integration with n8n workflows for scheduled operations.
-
-📋 Labs en cours de rédaction
-
----
-
-## Pipeline CI/CD
+### Pipeline CI/CD
 
 ```
-┌─────────┐    ┌────────────────┐    ┌──────────────────┐    ┌──────────────────┐
-│  lint   │───►│ ansible-deploy │───►│  terraform-plan  │───►│ terraform-apply  │
-│         │    │  (manuel/auto) │    │   (sur main)     │    │    (manuel)      │
-└─────────┘    └────────────────┘    └──────────────────┘    └──────────────────┘
+[lint] → [ansible-deploy] → [terraform-plan] → [terraform-apply]
 ```
 
-- **lint** : ansible-lint + yamllint sur tous les playbooks
-- **ansible-deploy** : automatique sur branches `lab/*`, manuel sur `main`
-- **terraform-plan** : plan affiché dans la MR pour review
-- **terraform-apply** : déclenchement manuel uniquement
+| Stage | Déclencheur |
+|-------|-------------|
+| **lint** | Automatique sur push |
+| **ansible-deploy** | Auto sur `lab/*`, manuel sur `main` |
+| **terraform-plan** | Manuel sur `main` |
+| **terraform-apply** | Manuel sur `main` après review du plan |
 
-> **EN** — The GitLab CI/CD pipeline runs on every push: linting first, then Ansible deployment (auto on lab branches, manual on main), followed by Terraform plan and apply stages.
+→ Voir [`docs/gitlab-cicd/`](docs/gitlab-cicd/)
 
 ---
 
-## Architecture homelab
-
-```
-pve1.culetto.fr (Proxmox VE — Intel NUC)
-│
-├── VM : gitlab.culetto.fr       ← Dépôt Git + Orchestrateur CI/CD
-├── VM : automation.culetto.fr   ← Runner GitLab + Ansible + Terraform
-└── VM : EVE-NG
-         ├── Switches AOS-CX (OVA 10.16)
-         └── Routeurs vJunos
-```
-
-> **EN** — All lab infrastructure runs on a single Intel NUC with Proxmox VE. GitLab, the automation VM (Ansible + Terraform runner), and EVE-NG are separate VMs. AOS-CX and vJunos devices run inside EVE-NG as virtual appliances.
-
----
-
-## Démarrage rapide
-
-### Prérequis
-
-- VM `automation.culetto.fr` configurée (voir [homelab-setup](https://github.com/Luconik/homelab-setup))
-- Switch AOS-CX dans EVE-NG avec REST API activée :
+### Démarrage rapide
 
 ```bash
-switch(config)# https-server rest access-mode read-write
-switch(config)# https-server vrf mgmt
-```
+# Cloner le repo
+git clone https://github.com/Luconik/netdevops.git
+cd netdevops
 
-### Lancer un lab Ansible
-
-```bash
-# Sur automation.culetto.fr
-source /opt/ansible-aruba/venv/bin/activate
-cd ~/netdevops/ansible
-
-# Vérifier la connectivité
-ansible-playbook -i hosts.yml check_facts.yml
+# Installer la collection Ansible AOS-CX
+ansible-galaxy collection install arubanetworks.aoscx
 
 # Lancer le lab 01
+cd ansible/
 ansible-playbook -i hosts.yml labs/01-vlan-management/site.yml
 ```
 
 ---
 
-## Repo associé
+### Documentation
+
+| Section | Description |
+|---------|-------------|
+| [`ansible/`](ansible/) | 6 labs AOS-CX — commandes, modules, topologies |
+| [`terraform/`](terraform/) | Provider aruba/aoscx, state GitLab, exemples HCL |
+| [`docs/gitlab-cicd/`](docs/gitlab-cicd/) | Pipeline 4 stages, variables CI/CD, workflow Git |
+| [`docs/aruba/`](docs/aruba/) | Portails HPE, modules Ansible, liens croisés |
+| [`docs/juniper/`](docs/juniper/) | Labs vJunos Phase 2 — NETCONF, PyEZ |
+
+---
+
+### Repos liés
 
 | Repo | Description |
 |------|-------------|
-| [homelab-setup](https://github.com/Luconik/homelab-setup) | Infrastructure homelab — Proxmox, EVE-NG, Docker, n8n, Security |
+| [`homelab-setup`](https://github.com/Luconik/homelab-setup) | Infrastructure homelab (Proxmox, EVE-NG, Docker, GitLab) |
+| [`hpe-aruba-guides`](https://github.com/Luconik/hpe-aruba-guides) | GreenLake SSO, NAC + Intune, Central workspace |
+
+---
+---
+
+<a name="en"></a>
+## 🇬🇧 English
+
+### Overview
+
+This repo documents a complete **NetDevOps pipeline** built in a homelab, targeting **HPE Aruba AOS-CX** switches and **Juniper vJunos** virtual routers.
+
+It covers 6 progressive Ansible labs, Terraform configuration, and a 4-stage GitLab CI/CD pipeline — hosted on a self-managed GitLab instance and mirrored to GitHub.
 
 ---
 
-## Contact
+### Tech stack
 
-- 🔗 **LinkedIn** : [linkedin.com/in/nicolasculetto](https://www.linkedin.com/in/nicolasculetto/)
-- 📧 **Email** : nicolas@culetto.fr
-- 🐙 **GitHub** : [github.com/Luconik](https://github.com/Luconik)
+| Component | Solution |
+|-----------|----------|
+| Hypervisor | Proxmox VE |
+| CI/CD | GitLab CE (self-hosted) |
+| Automation | Ansible + `arubanetworks.aoscx` collection |
+| IaC | Terraform + `aruba/aoscx` provider |
+| Target switch | HPE Aruba AOS-CX (REST API port 443) |
+| Virtual routers | Juniper vJunos (EVE-NG on Proxmox) — Phase 2 |
+| Automation VM | Ubuntu Server |
 
 ---
 
-> Les guides sont librement réutilisables avec mention de l'auteur (CC BY 4.0).
+### AOS-CX Labs
 
-<div align="center">
+| Lab | Topology | Complexity |
+|-----|----------|------------|
+| 01 — VLAN Management | Access & Trunk | ⭐ |
+| 02 — Campus 2-Tier L2 | VSX + ISL + MCLAG + Active GW | ⭐⭐ |
+| 03 — Campus 2-Tier L3 | OSPF Routed Access + SVIs | ⭐⭐⭐ |
+| 04 — VSX L2 | VSX + MSTP + MCLAG | ⭐⭐ |
+| 05 — Campus 3-Tier | VSX Agg + Core + OSPF | ⭐⭐⭐⭐ |
+| 06 — DC Collapsed Core | MCLAG + Jumbo MTU + OSPF | ⭐⭐⭐⭐ |
 
-*Made with ❤️ and too much coffee — Nicolas Culetto / Luconik*
+---
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-nicolasculetto-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/nicolasculetto/)
+### Quick start
 
-</div>
+```bash
+git clone https://github.com/Luconik/netdevops.git
+cd netdevops
+ansible-galaxy collection install arubanetworks.aoscx
+cd ansible/
+ansible-playbook -i hosts.yml labs/01-vlan-management/site.yml
+```
+
+---
+
+### Related repos
+
+| Repo | Description |
+|------|-------------|
+| [`homelab-setup`](https://github.com/Luconik/homelab-setup) | Homelab infrastructure (Proxmox, EVE-NG, Docker, GitLab) |
+| [`hpe-aruba-guides`](https://github.com/Luconik/hpe-aruba-guides) | GreenLake SSO, NAC + Intune, Central workspace |
+
+---
+
+*Last updated: March 2026 — [@Luconik](https://github.com/Luconik)*
