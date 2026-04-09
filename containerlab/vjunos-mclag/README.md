@@ -72,6 +72,9 @@ sudo containerlab deploy -t topology.yml
 sudo containerlab inspect --all
 ```
 
+![Topology graphique et inspect](captures/containerlab_Capture_J1.png)
+*Lab déployé — 2 switches + 2 clients Ubuntu, topology graphique dans VS Code*
+
 > ⚠️ Les switches vJunos prennent ~10-15 minutes à démarrer. Le statut `healthy` Docker précède le démarrage SSH de plusieurs minutes. Utiliser la console série si SSH ne répond pas :
 
 ```bash
@@ -80,6 +83,9 @@ docker exec -it clab-vjunos-mclag-sw1 telnet 0 5000
 # Puis désactiver l'Auto Image Upgrade :
 # configure
 # delete chassis auto-image-upgrade
+# set system services ssh root-login allow
+# set system login user admin class super-user
+# set system login user admin authentication plain-text-password
 # commit
 ```
 
@@ -90,10 +96,64 @@ ssh admin@172.20.20.7   # sw1 — admin/Lab12345!
 ssh admin@172.20.20.4   # sw2 — admin/Lab12345!
 ```
 
+### Configuration MC-LAG
+
+#### SW1
+
+```
+configure
+
+set chassis aggregated-devices ethernet device-count 2
+
+set interfaces ge-0/0/0 ether-options 802.3ad ae0
+set interfaces ge-0/0/1 ether-options 802.3ad ae0
+
+set interfaces ae0 aggregated-ether-options lacp active
+set interfaces ae0 aggregated-ether-options lacp system-id 00:01:00:00:00:01
+set interfaces ae0 aggregated-ether-options lacp admin-key 1
+set interfaces ae0 unit 0 family ethernet-switching interface-mode trunk
+set interfaces ae0 unit 0 family ethernet-switching vlan members all
+
+set interfaces ge-0/0/2 unit 0 family inet address 192.168.255.0/31
+
+set protocols iccp local-ip-addr 192.168.255.0
+set protocols iccp peer 192.168.255.1 redundancy-group-id-list 1
+set protocols iccp peer 192.168.255.1 liveness-detection minimum-interval 1000
+set protocols iccp peer 192.168.255.1 liveness-detection multiplier 3
+
+commit
+```
+
+#### SW2
+
+```
+configure
+
+set chassis aggregated-devices ethernet device-count 2
+
+set interfaces ge-0/0/0 ether-options 802.3ad ae0
+set interfaces ge-0/0/1 ether-options 802.3ad ae0
+
+set interfaces ae0 aggregated-ether-options lacp active
+set interfaces ae0 aggregated-ether-options lacp system-id 00:01:00:00:00:01
+set interfaces ae0 aggregated-ether-options lacp admin-key 1
+set interfaces ae0 unit 0 family ethernet-switching interface-mode trunk
+set interfaces ae0 unit 0 family ethernet-switching vlan members all
+
+set interfaces ge-0/0/2 unit 0 family inet address 192.168.255.1/31
+
+set protocols iccp local-ip-addr 192.168.255.1
+set protocols iccp peer 192.168.255.0 redundancy-group-id-list 1
+set protocols iccp peer 192.168.255.0 liveness-detection minimum-interval 1000
+set protocols iccp peer 192.168.255.0 liveness-detection multiplier 3
+
+commit
+```
+
 ### Validation
 
 ```bash
-# ICCP status — doit afficher TCP Connection: Established
+# ICCP status
 show iccp
 
 # LAG LACP
@@ -106,15 +166,14 @@ ping 192.168.255.1 count 5
 show interfaces terse
 ```
 
-Résultat attendu sur `show iccp` :
+![show lacp interfaces](captures/containerlab_Capture_J2.png)
+*LACP — ae0 avec ge-0/0/0 et ge-0/0/1 actifs*
 
-```
-Redundancy Group Information for peer 192.168.255.1
-  TCP Connection         : Established
-  Liveness Detection     : Up
-  Redundancy Group ID    Status
-  1                      Up
-```
+![ping keepalive](captures/containerlab_Capture_J3.png)
+*Ping keepalive 192.168.255.1 — 5/5, 0% loss, ~0.033ms*
+
+![show iccp](captures/containerlab_Capture_J4.png)
+*ICCP — TCP Connection Established, Liveness Detection Up, Redundancy Group Up*
 
 ### Différences AOS-CX VSX vs Juniper MC-LAG
 
@@ -149,11 +208,11 @@ containerlab/vjunos-mclag/
 
 ### Known Issues / Tips
 
-- vJunos-switch émule un **EX9214** — certaines fonctionnalités MC-LAG avancées (mc-ae) ne sont pas supportées en virtualisation Containerlab
-- Le message `Auto Image Upgrade` en boucle au démarrage est normal — désactiver avec `delete chassis auto-image-upgrade` + `commit`
-- `commit` sur Junos = `wr mem` sur AOS-CX (config active ET persistante)
-- `commit confirmed 5` : rollback automatique après 5 min si non confirmé — utile en prod
-- Credentials par défaut : `admin/Lab12345!` et `root/Lab12345!`
+- vJunos-switch émule un **EX9214** — mc-ae non supporté en virtualisation Containerlab, utiliser EVE-NG pour la config MC-LAG complète
+- Message `Auto Image Upgrade` en boucle au démarrage : normal — désactiver avec `delete chassis auto-image-upgrade` + `commit`
+- `commit` sur Junos = `wr mem` sur AOS-CX (config active ET persistante en une commande)
+- `commit confirmed 5` : rollback automatique après 5 min si non confirmé — très utile en production
+- Credentials : `admin/Lab12345!` et `root/Lab12345!`
 
 ---
 
@@ -225,6 +284,9 @@ sudo containerlab deploy -t topology.yml
 sudo containerlab inspect --all
 ```
 
+![Topology and inspect](captures/containerlab_Capture_J1.png)
+*Deployed lab — 2 switches + 2 Ubuntu clients, graphical topology in VS Code*
+
 > ⚠️ vJunos switches take ~10-15 minutes to start. Docker `healthy` status precedes SSH readiness by several minutes. Use serial console if SSH is unresponsive:
 
 ```bash
@@ -233,6 +295,9 @@ docker exec -it clab-vjunos-mclag-sw1 telnet 0 5000
 # Then disable Auto Image Upgrade:
 # configure
 # delete chassis auto-image-upgrade
+# set system services ssh root-login allow
+# set system login user admin class super-user
+# set system login user admin authentication plain-text-password
 # commit
 ```
 
@@ -243,10 +308,64 @@ ssh admin@172.20.20.7   # sw1 — admin/Lab12345!
 ssh admin@172.20.20.4   # sw2 — admin/Lab12345!
 ```
 
+### MC-LAG Configuration
+
+#### SW1
+
+```
+configure
+
+set chassis aggregated-devices ethernet device-count 2
+
+set interfaces ge-0/0/0 ether-options 802.3ad ae0
+set interfaces ge-0/0/1 ether-options 802.3ad ae0
+
+set interfaces ae0 aggregated-ether-options lacp active
+set interfaces ae0 aggregated-ether-options lacp system-id 00:01:00:00:00:01
+set interfaces ae0 aggregated-ether-options lacp admin-key 1
+set interfaces ae0 unit 0 family ethernet-switching interface-mode trunk
+set interfaces ae0 unit 0 family ethernet-switching vlan members all
+
+set interfaces ge-0/0/2 unit 0 family inet address 192.168.255.0/31
+
+set protocols iccp local-ip-addr 192.168.255.0
+set protocols iccp peer 192.168.255.1 redundancy-group-id-list 1
+set protocols iccp peer 192.168.255.1 liveness-detection minimum-interval 1000
+set protocols iccp peer 192.168.255.1 liveness-detection multiplier 3
+
+commit
+```
+
+#### SW2
+
+```
+configure
+
+set chassis aggregated-devices ethernet device-count 2
+
+set interfaces ge-0/0/0 ether-options 802.3ad ae0
+set interfaces ge-0/0/1 ether-options 802.3ad ae0
+
+set interfaces ae0 aggregated-ether-options lacp active
+set interfaces ae0 aggregated-ether-options lacp system-id 00:01:00:00:00:01
+set interfaces ae0 aggregated-ether-options lacp admin-key 1
+set interfaces ae0 unit 0 family ethernet-switching interface-mode trunk
+set interfaces ae0 unit 0 family ethernet-switching vlan members all
+
+set interfaces ge-0/0/2 unit 0 family inet address 192.168.255.1/31
+
+set protocols iccp local-ip-addr 192.168.255.1
+set protocols iccp peer 192.168.255.0 redundancy-group-id-list 1
+set protocols iccp peer 192.168.255.0 liveness-detection minimum-interval 1000
+set protocols iccp peer 192.168.255.0 liveness-detection multiplier 3
+
+commit
+```
+
 ### Validation
 
 ```bash
-# ICCP status — should show TCP Connection: Established
+# ICCP status
 show iccp
 
 # LAG LACP
@@ -259,15 +378,14 @@ ping 192.168.255.1 count 5
 show interfaces terse
 ```
 
-Expected output on `show iccp`:
+![show lacp interfaces](captures/containerlab_Capture_J2.png)
+*LACP — ae0 with ge-0/0/0 and ge-0/0/1 active*
 
-```
-Redundancy Group Information for peer 192.168.255.1
-  TCP Connection         : Established
-  Liveness Detection     : Up
-  Redundancy Group ID    Status
-  1                      Up
-```
+![keepalive ping](captures/containerlab_Capture_J3.png)
+*Keepalive ping 192.168.255.1 — 5/5, 0% loss, ~0.033ms*
+
+![show iccp](captures/containerlab_Capture_J4.png)
+*ICCP — TCP Connection Established, Liveness Detection Up, Redundancy Group Up*
 
 ### AOS-CX VSX vs Juniper MC-LAG Comparison
 
@@ -302,10 +420,10 @@ containerlab/vjunos-mclag/
 
 ### Known Issues / Tips
 
-- vJunos-switch emulates an **EX9214** — some advanced MC-LAG features (mc-ae) are not supported in Containerlab virtualization
-- The `Auto Image Upgrade` loop message at startup is normal — disable with `delete chassis auto-image-upgrade` + `commit`
-- `commit` on Junos = `wr mem` on AOS-CX (config active AND persistent)
-- `commit confirmed 5`: automatic rollback after 5 min if not confirmed — useful in production
+- vJunos-switch emulates an **EX9214** — mc-ae not supported in Containerlab virtualization, use EVE-NG for full MC-LAG config
+- `Auto Image Upgrade` loop at startup: normal — disable with `delete chassis auto-image-upgrade` + `commit`
+- `commit` on Junos = `wr mem` on AOS-CX (config active AND persistent in one command)
+- `commit confirmed 5`: automatic rollback after 5 min if not confirmed — very useful in production
 - Default credentials: `admin/Lab12345!` and `root/Lab12345!`
 
 ---
