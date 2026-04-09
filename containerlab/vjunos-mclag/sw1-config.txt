@@ -1,0 +1,131 @@
+## Last commit: 2026-04-09 16:13:43 UTC by admin
+version 25.4R1.12;
+system {
+    host-name sw1;
+    root-authentication {
+        encrypted-password "$6$ZlKUhM5P$1u7hh75EWGrWGby5Ljm6Ws.yOnR2PXCfOeKBJgyW.h8XovkfIpmUpBkn7yVpXERjfnsPyXXpVfna13tWVPeku1"; ## SECRET-DATA
+    }
+    login {
+        user admin {
+            uid 2000;
+            class super-user;
+            authentication {
+                encrypted-password "$6$VjPja4/L$jJtZhiffGu2G2vDweCS3w9jJWXgqurgGawIqavtEqD0grnA.Al/6HtX0.JPJePbUHY0RmrF2IbXhRYNSWzhG81"; ## SECRET-DATA
+            }
+        }
+    }
+    services {
+        ssh {
+            root-login allow;
+        }
+    }
+    arp {
+        aging-timer 5;
+    }
+    syslog {
+        file interactive-commands {
+            interactive-commands any;
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+    }
+    processes {
+        dhcp-service {
+            traceoptions {
+                file dhcp_logfile size 10m;
+                level all;
+                flag packet;
+            }
+        }
+    }
+}
+chassis {
+    aggregated-devices {
+        ethernet {
+            device-count 2;
+        }
+    }
+}
+interfaces {
+    ge-0/0/0 {
+        ether-options {
+            802.3ad ae0;
+        }
+    }
+    ge-0/0/1 {
+        ether-options {
+            802.3ad ae0;
+        }
+    }
+    ge-0/0/2 {
+        unit 0 {
+            family inet {
+                address 192.168.255.0/31;
+            }
+        }
+    }
+    ae0 {
+        aggregated-ether-options {
+            lacp {
+                active;
+                system-id 00:01:00:00:00:01;
+                admin-key 1;
+            }
+        }
+        unit 0 {
+            family ethernet-switching {
+                interface-mode trunk;
+                vlan {
+                    members all;
+                }
+            }
+        }
+    }
+    fxp0 {
+        unit 0 {
+            family inet {
+                dhcp {
+                    vendor-id Juniper-ex9214-VM69D7C47FAA;
+                }
+            }
+            family inet6 {
+                dhcpv6-client {
+                    client-type stateful;
+                    client-ia-type ia-na;
+                    client-identifier duid-type duid-ll;
+                    vendor-id Juniper:ex9214:VM69D7C47FAA;
+                }
+            }
+        }
+    }
+}
+multi-chassis {
+    mc-lag {
+        consistency-check;
+    }
+}
+protocols {
+    router-advertisement {
+        interface fxp0.0 {
+            managed-configuration;
+        }
+    }
+    iccp {
+        local-ip-addr 192.168.255.0;
+        peer 192.168.255.1 {
+            redundancy-group-id-list 1;
+            liveness-detection {
+                minimum-interval 1000;
+                multiplier 3;
+            }
+        }
+    }
+    lldp {
+        interface all;
+    }
+    lldp-med {
+        interface all;
+    }
+}
