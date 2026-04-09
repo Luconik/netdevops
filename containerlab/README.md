@@ -10,6 +10,9 @@ Ce repo regroupe des labs réseau reproductibles et des guides NetDevOps pour le
 
 Les labs sont conçus pour les ingénieurs réseau, presales et partenaires intégrateurs qui souhaitent pratiquer sans matériel physique.
 
+> 📄 **PDF Technote — Containerlab AOS-CX VSX & Juniper MC-LAG** :
+> [Télécharger le PDF / Download PDF](https://github.com/Luconik/netdevops/raw/main/containerlab/containerlab-hpe-networking.pdf)
+
 > 📖 **Guide de création de compte HPE Networking** (requis pour AOS-CX Simulator) :
 > [github.com/Luconik/hpe-aruba-guides/tree/main/nsp-account](https://github.com/Luconik/hpe-aruba-guides/tree/main/nsp-account)
 
@@ -65,6 +68,9 @@ Labs réseau virtualisés avec [Containerlab](https://containerlab.dev).
 This repo contains reproducible network labs and NetDevOps guides for both **HPE Networking** product lines — **Aruba AOS-CX** and **Juniper** — with a focus on Containerlab, Ansible and Terraform.
 
 Labs are designed for network engineers, presales and integrator partners who want to practice without physical hardware.
+
+> 📄 **PDF Technote — Containerlab AOS-CX VSX & Juniper MC-LAG** :
+> [Download PDF](https://github.com/Luconik/netdevops/raw/main/containerlab/containerlab-hpe-networking.pdf)
 
 > 📖 **HPE Networking account creation guide** (required for AOS-CX Simulator):
 > [github.com/Luconik/hpe-aruba-guides/tree/main/nsp-account](https://github.com/Luconik/hpe-aruba-guides/tree/main/nsp-account)
