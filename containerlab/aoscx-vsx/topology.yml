@@ -1,0 +1,15 @@
+name: aoscx-vsx
+
+topology:
+  nodes:
+    sw1:
+      kind: vr-aoscx
+      image: vrnetlab/vr-aoscx:10.16.1020
+    sw2:
+      kind: vr-aoscx
+      image: vrnetlab/vr-aoscx:10.16.1020
+
+  links:
+    - endpoints: ["sw1:eth1", "sw2:eth1"]  # ISL-1
+    - endpoints: ["sw1:eth2", "sw2:eth2"]  # ISL-2
+    - endpoints: ["sw1:eth3", "sw2:eth3"]  # VSX Keepalive

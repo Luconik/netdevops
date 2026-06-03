@@ -1,0 +1,28 @@
+name: vjunos-mclag
+
+topology:
+  nodes:
+    sw1:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/juniper_vjunos-switch:25.4R1.12
+      startup-config: sw1-startup.cfg
+
+    sw2:
+      kind: juniper_vjunosswitch
+      image: vrnetlab/juniper_vjunos-switch:25.4R1.12
+      startup-config: sw2-startup.cfg
+
+    client1:
+      kind: linux
+      image: ubuntu:24.04
+
+    client2:
+      kind: linux
+      image: ubuntu:24.04
+
+  links:
+    - endpoints: ["sw1:ge-0/0/0", "sw2:ge-0/0/0"]  # ICL-1 (Inter-Chassis Link)
+    - endpoints: ["sw1:ge-0/0/1", "sw2:ge-0/0/1"]  # ICL-2
+    - endpoints: ["sw1:ge-0/0/2", "sw2:ge-0/0/2"]  # ICCP keepalive
+    - endpoints: ["sw1:ge-0/0/3", "client1:eth1"]   # client1 → sw1
+    - endpoints: ["sw2:ge-0/0/3", "client2:eth1"]   # client2 → sw2
